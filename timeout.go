@@ -3,7 +3,6 @@ package main
 import (
     "net/http"
     "fmt"
-    "strings"
     "log"
     "context"
     "time"
@@ -32,10 +31,22 @@ func consume()string{
     defer consumer.Close()
     ctx := context.Background()
     // Listen on the topic
-    msg, err := consumer.Receive(ctx)
+    var msg pulsar.Message
+    c1 := make(chan string, 1)
+    go func() {
+        msg, err = consumer.Receive(ctx)
+        c1 <- "Successly received a msg!\n"
+    }()
+    select {
+    case res := <-c1:
+        fmt.Println(res)
+    case <-time.After(1 * time.Second):
+        fmt.Println("timeout after 1 second\n")
+	return ""
+    }
 
+    // Listen on the topic
     if err != nil { log.Fatal(err) }
-    // Do something with the message
     // Acknowledges a message to the Pulsar broker
     consumer.Ack(msg)
     // spew.Printf("Message successfully received: %s\n", msg);
@@ -43,13 +54,16 @@ func consume()string{
 }
 
 func main() {
+
     mux := http.NewServeMux()
     mux.HandleFunc("/", func(w http.ResponseWriter, req *http.Request) {
-      fmt.Fprintf(w, "Welcome to the home page!\n")
-      s := consume();
-      fmt.Fprintf(w, s);
-      s = consume();
-      fmt.Fprintf(w, s);
+        fmt.Fprintf(w, "Welcome to the home page!\n")
+        s := consume();
+	if(s!="") {
+            fmt.Fprintf(w, s);
+        }else {
+            fmt.Fprintf(w, "No logs reside in pulsar\n");
+	}
     })
 
     n := negroni.Classic() // Includes some default middlewares
@@ -57,4 +71,3 @@ func main() {
 
     http.ListenAndServe(":3000", n)
 }
-
