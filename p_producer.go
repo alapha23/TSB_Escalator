@@ -3,6 +3,7 @@ import (
     "context"
     "fmt"
     "log"
+    "time"
 
     "github.com/apache/pulsar/pulsar-client-go/pulsar"
     "github.com/davecgh/go-spew/spew"
@@ -26,10 +27,12 @@ func main() {
     ctx := context.Background()
 
     // Send 10 messages synchronously and 10 messages asynchronously
-    for i := 0; i < 10; i++ {
+    for i := 0; i < 100; i++ {
         // Create a message
         msg := pulsar.ProducerMessage{
-            Payload: []byte(fmt.Sprintf("message-%d", i)),
+            Payload: []byte(fmt.Sprintf("{\"id\":%d,\"content\":\"\",\"create_time\":\"%s\"}", i, time.Now().Format(time.RFC3339))),
+	    Key: "message-key",
+            EventTime: time.Now(),
         }
 
         // Attempt to send the message

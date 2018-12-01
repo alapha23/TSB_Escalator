@@ -36,7 +36,7 @@ func main() {
 
         // Do something with the message
 	// Acknowledges a message to the Pulsar broker
-        consumer.Ack(msg)
-	spew.Printf("Message successfully received: %s\n", msg);
+        // consumer.Ack(msg)
+        spew.Printf("Message successfully received: %s\n", msg.Payload());
     }
 }
